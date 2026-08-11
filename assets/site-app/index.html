@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Rhino Site Studio</title>
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="vendor/leaflet.draw.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!--
+  THESIS: A site boundary should be chosen, checked, and handed to Rhino in one calm workbench. The category default it refuses is a form-heavy wizard that hides the map.
+  OWN-WORLD: Off-white and charcoal surfaces, one cobalt accent, quiet hairlines, square 6px controls, and a full-bleed cartographic work area.
+  STORY: The user finds a place, draws one boundary, checks the extent and precision, then saves a reproducible site package.
+  FIRST VIEWPORT: A 64px header sits above a map that fills the viewport. A compact right rail holds the boundary action and settings; the lower status bar reports activity.
+  FORM: Local GIS workbench extension, code-led, seed key rhino-site-studio-operate.
+  FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+  -->
+  <header class="topbar">
+    <div class="brand-block">
+      <span class="brand-mark" aria-hidden="true">RS</span>
+      <div>
+        <p class="brand-name">Rhino Site Studio</p>
+        <p class="brand-subtitle" data-i18n="brandSubtitle">OSM + GEE terrain workbench</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span id="connection-state" class="state-label">Local service</span>
+      <div class="language-switch" role="group" data-i18n-aria-label="languageLabel">
+        <button class="language-option is-active" type="button" data-language="en" aria-pressed="true">EN</button>
+        <button class="language-option" type="button" data-language="zh" aria-pressed="false">中文</button>
+      </div>
+      <button class="button button-quiet" id="theme-toggle" type="button" aria-pressed="false" data-i18n="darkMode">Dark mode</button>
+    </div>
+  </header>
+
+  <main class="workbench">
+    <section class="map-shell" data-i18n-aria-label="mapWorkspace">
+      <div id="map" class="map-canvas"></div>
+      <div id="map-fallback" class="map-fallback" hidden>
+        <strong data-i18n="mapUnavailable">Map tiles are unavailable</strong>
+        <span data-i18n="mapUnavailableHelp">Draw or load a GeoJSON boundary from the controls.</span>
+      </div>
+      <div class="map-tools" role="group" data-i18n-aria-label="mapActions">
+        <button id="locate-button" class="tool-button" type="button" data-i18n="findView">Find my view</button>
+        <button id="load-boundary-button" class="tool-button" type="button" data-i18n="loadGeoJson">Load GeoJSON</button>
+        <input id="boundary-file" type="file" accept=".geojson,.json,application/geo+json,application/json" hidden>
+      </div>
+      <div id="tile-state" class="map-state" hidden data-i18n="tileState">OSM tiles unavailable. Offline boundaries active.</div>
+      <div class="map-attribution" data-i18n="attribution">OpenStreetMap contributors / Natural Earth</div>
+    </section>
+
+    <aside class="control-rail" data-i18n-aria-label="siteControls">
+      <div class="rail-scroll">
+        <div class="section-heading">
+          <h1 data-i18n="selectSite">Select a working site</h1>
+          <p data-i18n="selectSiteHelp">Choose a boundary first. Network requests stay local to this service.</p>
+        </div>
+
+        <div class="selection-readout" aria-live="polite">
+          <div class="readout-head">
+            <span data-i18n="boundary">Boundary</span>
+            <span id="boundary-state" class="readout-state">Not selected</span>
+          </div>
+          <dl class="readout-grid">
+            <div><dt data-i18n="west">West</dt><dd id="bbox-west">-</dd></div>
+            <div><dt data-i18n="south">South</dt><dd id="bbox-south">-</dd></div>
+            <div><dt data-i18n="east">East</dt><dd id="bbox-east">-</dd></div>
+            <div><dt data-i18n="north">North</dt><dd id="bbox-north">-</dd></div>
+          </dl>
+          <p id="area-readout" class="helper">Draw a rectangle or polygon on the map.</p>
+        </div>
+
+        <div class="action-stack">
+          <button id="save-selection" class="button button-primary button-wide" type="button" disabled data-i18n="saveBoundary">Save boundary</button>
+          <div class="split-actions">
+            <button id="plan-osm" class="button button-secondary" type="button" disabled data-i18n="planOsm">Plan OSM</button>
+            <button id="plan-dem" class="button button-secondary" type="button" disabled data-i18n="planDem">Plan DEM</button>
+          </div>
+        </div>
+
+        <form id="search-form" class="search-form">
+          <label for="place-search" data-i18n="findPlace">Find a place</label>
+          <div class="search-row">
+            <input id="place-search" name="place" type="search" autocomplete="off" placeholder="City, address, or landmark" data-i18n-placeholder="placePlaceholder">
+            <button class="button button-primary" type="submit" data-i18n="search">Search</button>
+          </div>
+          <p id="search-message" class="helper" role="status"></p>
+        </form>
+
+        <div class="field-group">
+          <label for="osm-provider" data-i18n="osmSource">OSM source</label>
+          <select id="osm-provider">
+            <option value="overpass" data-i18n="osmOverpass">Overpass, small areas</option>
+            <option value="local" data-i18n="osmLocal">Local OSM or PBF</option>
+            <option value="geofabrik" data-i18n="osmGeofabrik">Geofabrik PBF extract</option>
+          </select>
+          <p class="helper" data-i18n="osmHelp">Overpass needs no login. Large sites should use a local PBF.</p>
+        </div>
+
+        <div class="field-group">
+          <label for="dem-dataset" data-i18n="terrainSource">Terrain source</label>
+          <select id="dem-dataset">
+            <option value="COPERNICUS/DEM/GLO30" data-i18n="demCopernicus">Copernicus GLO-30</option>
+            <option value="USGS/SRTMGL1_003" data-i18n="demSrtm">USGS SRTM 30 m</option>
+            <option value="NASA/NASADEM_HGT/001" data-i18n="demNasadem">NASADEM 30 m</option>
+            <option value="local" data-i18n="demLocal">Local GeoTIFF or ASCII grid</option>
+          </select>
+          <p class="helper" data-i18n="geeHelp">GEE uses your local Earth Engine session and project.</p>
+        </div>
+
+        <div class="field-group">
+          <label for="gee-project"><span data-i18n="geeProject">GEE project ID</span> <span class="optional" data-i18n="optional">optional</span></label>
+          <input id="gee-project" type="text" inputmode="text" placeholder="earthengine-project">
+        </div>
+
+        <fieldset class="field-group precision-group">
+          <legend data-i18n="terrainPrecision">Terrain precision</legend>
+          <div class="segmented" role="radiogroup" data-i18n-aria-label="terrainPrecision">
+            <label><input type="radio" name="precision" value="draft"><span data-i18n="draft">Draft</span></label>
+            <label><input type="radio" name="precision" value="standard" checked><span data-i18n="standard">Standard</span></label>
+            <label><input type="radio" name="precision" value="fine"><span data-i18n="fine">Fine</span></label>
+          </div>
+          <p id="precision-note" class="helper">10 m sampling target. Source resolution remains the accuracy limit.</p>
+        </fieldset>
+
+        <div class="notice" id="auth-notice">
+          <strong data-i18n="credentialsTitle">Credentials stay outside the skill</strong>
+          <p data-i18n="credentialsHelp">OSM is public. GEE may ask you to authorize locally and provide a project ID. Tokens are never saved here.</p>
+        </div>
+      </div>
+      <footer class="rail-footer">
+        <div class="tabs" role="group" data-i18n-aria-label="workspaceView">
+          <button class="tab is-active" id="map-tab" aria-pressed="true" type="button" data-i18n="map">Map</button>
+          <button class="tab" id="preview-tab" aria-pressed="false" type="button" data-i18n="extent">Extent</button>
+        </div>
+        <p id="activity-message" class="activity-message" role="status">Ready for a boundary.</p>
+      </footer>
+    </aside>
+  </main>
+
+  <section id="preview-panel" class="preview-panel" aria-labelledby="preview-tab" hidden>
+    <div class="preview-head">
+      <div>
+        <h2 data-i18n="workingExtent">Working extent</h2>
+        <p data-i18n="extentHelp">This plane shows only the selected bounds. Terrain appears after DEM acquisition and the Rhino build.</p>
+      </div>
+      <button id="close-preview" class="button button-secondary" type="button" data-i18n="backToMap">Back to map</button>
+    </div>
+    <div class="preview-stage">
+      <canvas id="preview-canvas" width="1200" height="620" data-i18n-aria-label="extentPreview"></canvas>
+      <div id="preview-empty" class="preview-empty" data-i18n="previewEmpty">Draw a boundary to see the working extent.</div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <script src="vendor/leaflet.js"></script>
+  <script src="vendor/leaflet.draw.js"></script>
+  <script src="vendor/topojson-client.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
