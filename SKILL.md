@@ -1,6 +1,6 @@
 ---
 name: rhino-osm-terrain-modeling
-description: Build or repair reusable Heron-free Rhino 8 and Grasshopper site models from OpenStreetMap vectors and Google Earth Engine or local DEM data. Use for Codex world-map site selection, GeoJSON cropping, OSM/Overpass/Geofabrik acquisition, GEE DEM export, QGIS/GDAL preprocessing, adjustable terrain precision, roads/buildings/water/land-use draping, RhinoCommon geometry generation, diagnostics, and verified .3dm delivery.
+description: Build or repair reusable Heron-free Rhino site models from OpenStreetMap vectors and Google Earth Engine or local DEM data. Use for Codex world-map site selection, GeoJSON cropping, OSM/Overpass/Geofabrik acquisition, GEE DEM export, QGIS/GDAL preprocessing, adjustable terrain precision, headless rhino3dm generation, optional RhinoCommon enhancement, diagnostics, and verified .3dm delivery.
 ---
 
 # Rhino OSM Terrain Modeling
@@ -8,7 +8,7 @@ description: Build or repair reusable Heron-free Rhino 8 and Grasshopper site mo
 Create a repeatable site package through one pipeline:
 
 ```text
-Codex map UI -> local Python acquisition -> GDAL/osmium normalization -> RhinoCommon build -> diagnostic
+Codex map + OSM preview/configuration -> local Python acquisition -> GDAL/osmium normalization -> rhino3dm .3dm -> diagnostic
 ```
 
 Do not require Heron. Keep browser selection, data acquisition, preprocessing, and Rhino geometry in separate layers. Read [workflow-contract.md](references/workflow-contract.md) before changing the workflow boundary.
@@ -19,11 +19,11 @@ Do not require Heron. Keep browser selection, data acquisition, preprocessing, a
 - Require a confirmed WGS84 boundary before any network request.
 - Run acquisition dry first. Add `--run` only after the user confirms the boundary and providers.
 - Use the user's local Earth Engine authorization. Never request or store passwords, tokens, or service-account JSON.
-- Use a projected metric CRS for Rhino. Set the Rhino document to meters before adding geometry.
+- Use a projected metric CRS and write the `.3dm` in meters.
 - Treat precision as processing density. Never describe interpolation below native DEM resolution as increased accuracy.
 - Use `osmium` and GDAL's OSM driver for clipping and multipolygon assembly. Do not hand-roll relation rings.
 - Preserve raw inputs. Write normalized files and manifests below the project data folder.
-- Build all OSM z values from the same DEM sampler as the terrain.
+- Build all OSM z values from the same DEM sampler as the terrain. Use Shapely to union, split, and triangulate continuous projected surfaces.
 - Finish with actual object counts, bounds, units, limitations, a saved `.3dm`, and a nonempty diagnostic JSON.
 
 ## Workflow
@@ -50,7 +50,7 @@ Read [map-selection-contract.md](references/map-selection-contract.md) and [fron
 python scripts/launch_site_app.py --output-dir <project>\data --port 0
 ```
 
-Open the printed URL in the Codex in-app Browser when available. Let the user draw or load one boundary, choose providers and precision, then save. Verify `site_boundary.geojson` and `site_selection.json` before continuing.
+Open the printed URL in the Codex in-app Browser when available. Let the user draw or load one boundary, choose providers and precision, then select **Save and configure model**. In the Model view, optionally load the bounded Overpass preview, inspect building massing and layer styling, set default/floor heights and the height multiplier, choose layer visibility/colors, and save. The preview is planar; do not describe it as DEM-draped. Verify `site_boundary.geojson` and `site_selection.json`, including `model_settings`, before continuing.
 
 ### 3. Acquire data
 
@@ -84,30 +84,32 @@ python scripts/rhino_site_builder.py <project>\data\derived\site_manifest.json -
 
 Skip the XML validator for PBF-only sources. Do not proceed when DEM dimensions, CRS, or extents are implausible.
 
-### 5. Build in Rhino 8
+### 5. Build the `.3dm` headlessly
 
-Read [rhino-builder-contract.md](references/rhino-builder-contract.md). Generate a project-local launcher:
+Read [rhino-builder-contract.md](references/rhino-builder-contract.md). Generate the model directly:
 
 ```powershell
-python scripts/make_rhino_launcher.py <project>\data\derived\site_manifest.json
+python scripts/rhino3dm_site_builder.py <project>\data\derived\site_manifest.json
 ```
 
-Run the printed `build_site_in_rhino.py` with Rhino 8 `RunPythonScript`. Keep a Grasshopper Python component thin: expose paths, precision, `Run`, and `Bake`, then call the same `build_site` function rather than reimplementing geometry.
+This ordinary-Python path is the default and must write `site_model.3dm` plus `rhino_build_report.json` without opening Rhino. It requires `rhino3dm` and Shapely, writes real Rhino materials, applies the configured height fallback, and produces merged terrain-projected road/water/land-use meshes. Use `make_rhino_launcher.py` only when the user requests the optional RhinoCommon/NURBS enhancement or visual review in Rhino 8. Keep a Grasshopper Python component thin and call the existing RhinoCommon builder rather than reimplementing geometry.
 
 ### 6. Verify delivery
 
 Check all of the following:
 
-- Rhino units are meters.
+- `.3dm` units are meters.
 - Terrain and hidden DEM reference contain geometry.
 - Terrain z range is nonzero and plausible.
 - Contours use the recorded interval.
 - Road, building, water, and land-use counts match source availability.
 - OSM and DEM bounds overlap after the documented transform.
-- Buildings without source height remain footprints.
+- Buildings without source height use the configured default height; the diagnostic separates `height`, `levels`, and `default` sources.
+- Layer colors, object material indices, visibility, and water transparency survive a `rhino3dm` readback.
+- Road surfaces are buffered/unioned before DEM projection; water and land-use categories are merged into projected mesh objects instead of disconnected flat pieces.
 - The local origin and source CRS are recorded.
 - `rhino_build_report.json` is nonempty and references an existing saved `.3dm`.
-- `latest_build_error.txt` is absent or empty.
+- The report identifies `rhino3dm-headless` as the backend.
 
 ## Failure Routing
 
@@ -116,9 +118,10 @@ Check all of the following:
 - If GEE rejects initialization, stop and request local authorization or the registered project ID, never the credential itself.
 - If GDAL is not on `PATH`, let `prepare_site_data.py` discover a local QGIS/OSGeo4W installation before reporting it missing. If GDAL or osmium is still unavailable, use QGIS or install the missing tool before normalization.
 - If terrain creation fails, retain the reference mesh, record the mesh fallback, and do not claim a NURBS surface.
+- If `pip` cannot unpack `rhino3dm`, let `bootstrap_environment.py --install` download and safely extract the matching official wheel into the skill-managed runtime.
 - If roads are tiny or offset, fix document units or CRS/origin alignment and rebuild. Do not compensate with arbitrary scale factors.
 - If fine mode looks falsely detailed, compare requested and native resolution and label interpolation.
 
 ## Deliverables
 
-Return the confirmed boundary, selection settings, acquisition report and source sidecars, normalized manifest, Rhino launcher or Grasshopper trigger, saved `.3dm`, build diagnostic, units, CRS, local origin, terrain method, precision, object counts, attribution, and source limitations.
+Return the confirmed boundary, selection settings, acquisition report and source sidecars, normalized manifest, saved `.3dm`, build diagnostic, units, CRS, local origin, terrain method, precision, object counts, attribution, and source limitations. Return a Rhino launcher only when the optional RhinoCommon enhancement was requested.

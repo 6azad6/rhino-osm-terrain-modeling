@@ -5,20 +5,33 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import hashlib
 import importlib.util
 import json
 import os
 import shutil
 import subprocess
 import sys
+import urllib.request
+import zipfile
 from pathlib import Path
 
 from prepare_site_data import _windows_drives, command_environment, osgeo4w_root, tool
 
 
 def state_path():
-    base = Path(os.environ.get("LOCALAPPDATA", Path.home() / ".local" / "share"))
-    return base / "Codex" / "rhino-osm-terrain-modeling" / "bootstrap.json"
+    return Path(__file__).resolve().parent.parent / ".runtime" / "bootstrap.json"
+
+
+def managed_python_path():
+    return Path(__file__).resolve().parent.parent / ".runtime" / "python"
+
+
+def python_module_available(name):
+    if importlib.util.find_spec(name) is not None:
+        return True
+    managed = managed_python_path()
+    return (managed / name).exists() or any(managed.glob(f"{name}-*.dist-info"))
 
 
 def find_rhino():
@@ -57,6 +70,12 @@ def install_commands(status):
         commands["osmium"] = ["conda", "install", "--yes", "--channel", "conda-forge", "osmium-tool"]
     if not status["components"]["earth_engine"]["installed"]:
         commands["earth_engine"] = [sys.executable, "-m", "pip", "install", "--upgrade", "earthengine-api"]
+    if not status["components"]["rhino3dm"]["installed"]:
+        commands["rhino3dm"] = [
+            sys.executable, "-m", "pip", "install", "--upgrade", "--target", str(managed_python_path()), "rhino3dm"
+        ]
+    if not status["components"]["shapely"]["installed"]:
+        commands["shapely"] = [sys.executable, "-m", "pip", "install", "--upgrade", "shapely"]
     return commands
 
 
@@ -67,7 +86,9 @@ def inspect_environment():
     qgis_root = osgeo4w_root(gdalwarp or gdal_translate or ogr2ogr)
     osmium = tool("osmium")
     rhino = find_rhino()
-    earth_engine = importlib.util.find_spec("ee") is not None
+    earth_engine = python_module_available("ee")
+    rhino3dm = python_module_available("rhino3dm")
+    shapely = python_module_available("shapely")
     components = {
         "qgis_gdal": {
             "installed": all((gdalwarp, gdal_translate, ogr2ogr)),
@@ -87,11 +108,23 @@ def inspect_environment():
             "version": None,
             "required_when": "Google Earth Engine DEM acquisition",
         },
+        "rhino3dm": {
+            "installed": rhino3dm,
+            "path": str(managed_python_path()) if rhino3dm else None,
+            "version": None,
+            "required_when": "default headless .3dm generation",
+        },
+        "shapely": {
+            "installed": shapely,
+            "path": sys.executable if shapely else None,
+            "version": None,
+            "required_when": "continuous roads and projected polygon surfaces",
+        },
         "rhino_8": {
             "installed": bool(rhino),
             "path": rhino,
             "version": None,
-            "required_when": "final .3dm generation; manual license installation",
+            "required_when": "optional RhinoCommon enhancement and visual review",
         },
     }
     status = {
@@ -107,6 +140,52 @@ def inspect_environment():
     status["install_plan"] = commands
     status["reminder_needed"] = status["first_run"] and bool(commands)
     return status
+
+
+def install_rhino3dm_fallback():
+    """Install the official compatible wheel without invoking pip's unpacker."""
+    api_url = "https://pypi.org/pypi/rhino3dm/json"
+    with urllib.request.urlopen(api_url, timeout=60) as response:
+        payload = json.load(response)
+    cp_tag = f"cp{sys.version_info.major}{sys.version_info.minor}"
+    if os.name == "nt":
+        platform_tags = ("win_amd64", "win32", "win_arm64")
+    elif sys.platform == "darwin":
+        platform_tags = ("macosx",)
+    else:
+        platform_tags = ("manylinux", "musllinux", "linux")
+    candidates = []
+    for item in payload.get("urls", []):
+        filename = item.get("filename", "")
+        if filename.endswith(".whl") and cp_tag in filename and any(tag in filename for tag in platform_tags):
+            candidates.append(item)
+    if not candidates:
+        raise RuntimeError(f"No rhino3dm wheel matches {cp_tag} on {sys.platform}")
+    item = candidates[0]
+    target = managed_python_path()
+    target.mkdir(parents=True, exist_ok=True)
+    temp_root = managed_python_path().parent / "downloads"
+    temp_root.mkdir(parents=True, exist_ok=True)
+    wheel_path = temp_root / item["filename"]
+    urllib.request.urlretrieve(item["url"], wheel_path)
+    expected_sha256 = (item.get("digests") or {}).get("sha256")
+    if expected_sha256:
+        actual_sha256 = hashlib.sha256(wheel_path.read_bytes()).hexdigest()
+        if actual_sha256 != expected_sha256:
+            raise RuntimeError(f"rhino3dm wheel checksum mismatch: {wheel_path.name}")
+    target_root = target.resolve()
+    with zipfile.ZipFile(wheel_path) as archive:
+        for member in archive.infolist():
+            destination = (target / member.filename).resolve()
+            if destination != target_root and target_root not in destination.parents:
+                raise RuntimeError(f"Unsafe wheel member: {member.filename}")
+        archive.extractall(target)
+    return {
+        "component": "rhino3dm",
+        "method": "official-wheel-extract",
+        "wheel": str(wheel_path),
+        "target": str(target),
+    }
 
 
 def write_state(action, status, logs=None):
@@ -126,14 +205,26 @@ def install_missing():
     before = inspect_environment()
     logs = []
     for component, command in before["install_plan"].items():
-        result = subprocess.run(command, capture_output=True, text=True, check=False)
-        logs.append({
+        env = os.environ.copy()
+        temp_dir = managed_python_path().parent / "temp"
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        env["TEMP"] = str(temp_dir)
+        env["TMP"] = str(temp_dir)
+        result = subprocess.run(command, capture_output=True, text=True, check=False, env=env)
+        log = {
             "component": component,
             "command": command,
             "returncode": result.returncode,
             "stdout": result.stdout[-2000:],
             "stderr": result.stderr[-2000:],
-        })
+        }
+        if component == "rhino3dm" and result.returncode != 0:
+            try:
+                log["fallback"] = install_rhino3dm_fallback()
+                log["returncode"] = 0
+            except Exception as error:
+                log["fallback_error"] = str(error)
+        logs.append(log)
     tool.cache_clear()
     after = inspect_environment()
     write_state("install", after, logs)

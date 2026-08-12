@@ -6,6 +6,8 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import math
+import re
 import subprocess
 import sys
 import threading
@@ -17,6 +19,31 @@ from pathlib import Path
 
 
 PRECISION_SCALE = {"draft": 30.0, "standard": 10.0, "fine": 3.0}
+DEFAULT_MODEL_SETTINGS = {
+    "default_building_height_m": 10.0,
+    "floor_height_m": 3.0,
+    "height_scale": 1.0,
+    "colors": {
+        "terrain": "#697e61",
+        "contours": "#5c6e53",
+        "roads": "#9b8e7c",
+        "buildings": "#b8c0ca",
+        "water": "#4984b0",
+        "landuse": "#719064",
+    },
+    "visible_layers": {
+        "terrain": True,
+        "contours": True,
+        "roads": True,
+        "buildings": True,
+        "water": True,
+        "landuse": True,
+    },
+}
+PREVIEW_ENDPOINTS = (
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+)
 ALLOWED_STATIC = {
     "/": ("index.html", "text/html; charset=utf-8"),
     "/index.html": ("index.html", "text/html; charset=utf-8"),
@@ -86,6 +113,144 @@ def write_json(path, payload):
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+def _clamp_number(value, fallback, minimum, maximum):
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        number = fallback
+    return min(max(number, minimum), maximum)
+
+
+def normalize_model_settings(payload):
+    source = payload if isinstance(payload, dict) else {}
+    colors = source.get("colors") if isinstance(source.get("colors"), dict) else {}
+    visible = source.get("visible_layers") if isinstance(source.get("visible_layers"), dict) else {}
+    result = {
+        "default_building_height_m": _clamp_number(
+            source.get("default_building_height_m"), 10.0, 1.0, 300.0
+        ),
+        "floor_height_m": _clamp_number(source.get("floor_height_m"), 3.0, 2.0, 8.0),
+        "height_scale": _clamp_number(source.get("height_scale"), 1.0, 0.2, 3.0),
+        "colors": {},
+        "visible_layers": {},
+    }
+    for key, fallback in DEFAULT_MODEL_SETTINGS["colors"].items():
+        value = str(colors.get(key, fallback)).lower()
+        result["colors"][key] = value if re.fullmatch(r"#[0-9a-f]{6}", value) else fallback
+    for key, fallback in DEFAULT_MODEL_SETTINGS["visible_layers"].items():
+        result["visible_layers"][key] = bool(visible.get(key, fallback))
+    return result
+
+
+def _preview_query(bbox):
+    west, south, east, north = bbox
+    box = f"{south:.8f},{west:.8f},{north:.8f},{east:.8f}"
+    return f"""[out:json][timeout:90];
+(
+  way["building"]({box});
+  relation["building"]["type"="multipolygon"]({box});
+  way["highway"]["area"!="yes"]({box});
+  way["natural"="water"]({box});
+  way["waterway"]({box});
+  relation["natural"="water"]["type"="multipolygon"]({box});
+  way["landuse"]({box});
+  relation["landuse"]["type"="multipolygon"]({box});
+);
+out tags geom;
+"""
+
+
+def _preview_ring(geometry):
+    points = [[float(point["lon"]), float(point["lat"])] for point in geometry or [] if "lon" in point and "lat" in point]
+    if len(points) >= 3 and points[0] != points[-1]:
+        points.append(points[0])
+    return points
+
+
+def compact_preview(payload, max_features=2500):
+    features = []
+    counts = {"buildings": 0, "roads": 0, "water": 0, "landuse": 0}
+    for element in payload.get("elements") or []:
+        tags = element.get("tags") or {}
+        kind = None
+        if tags.get("building"):
+            kind = "buildings"
+        elif tags.get("highway"):
+            kind = "roads"
+        elif tags.get("natural") == "water" or tags.get("waterway"):
+            kind = "water"
+        elif tags.get("landuse"):
+            kind = "landuse"
+        if not kind:
+            continue
+        geometries = []
+        if element.get("type") == "way":
+            ring = _preview_ring(element.get("geometry"))
+            if len(ring) >= (4 if kind != "roads" else 2):
+                geometries.append(ring)
+        else:
+            for member in element.get("members") or []:
+                if member.get("type") == "way" and member.get("role") in ("outer", ""):
+                    ring = _preview_ring(member.get("geometry"))
+                    if len(ring) >= (4 if kind != "roads" else 2):
+                        geometries.append(ring)
+        for geometry in geometries:
+            features.append({
+                "kind": kind,
+                "coordinates": geometry,
+                "height": tags.get("height"),
+                "levels": tags.get("building:levels"),
+                "width": tags.get("width"),
+                "highway": tags.get("highway"),
+            })
+            counts[kind] += 1
+            if len(features) >= max_features:
+                return {"features": features, "counts": counts, "truncated": True}
+    return {"features": features, "counts": counts, "truncated": False}
+
+
+def fetch_osm_preview(bbox, cache_path=None):
+    width_km = abs(bbox[2] - bbox[0]) * 111.32 * math.cos(math.radians((bbox[1] + bbox[3]) / 2))
+    height_km = abs(bbox[3] - bbox[1]) * 110.54
+    area_km2 = abs(width_km * height_km)
+    if area_km2 > 100:
+        raise ValueError("OSM preview is limited to 100 km2. Reduce the boundary or use the formal local PBF workflow.")
+    cached = read_json(cache_path) if cache_path else None
+    cached_bbox = cached.get("bbox_wgs84") if cached else None
+    same_bbox = (
+        isinstance(cached_bbox, list)
+        and len(cached_bbox) == 4
+        and all(abs(float(cached_bbox[index]) - bbox[index]) < 1e-8 for index in range(4))
+    )
+    if cached and cached.get("features") and same_bbox:
+        result = dict(cached)
+        result.update({"ok": True, "area_km2": area_km2, "source": "local-preview-cache"})
+        return result
+    body = urllib.parse.urlencode({"data": _preview_query(bbox)}).encode("utf-8")
+    errors = []
+    for endpoint in PREVIEW_ENDPOINTS:
+        try:
+            request = urllib.request.Request(
+                endpoint,
+                data=body,
+                method="POST",
+                headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "User-Agent": "codex-rhino-site-studio/3.0",
+                },
+            )
+            with urllib.request.urlopen(request, timeout=120) as response:
+                result = compact_preview(json.loads(response.read().decode("utf-8")))
+            result.update({"ok": True, "area_km2": area_km2, "source": endpoint})
+            result["bbox_wgs84"] = bbox
+            if cache_path:
+                write_json(cache_path, result)
+            return result
+        except Exception as error:
+            errors.append(f"{endpoint}: {error}")
+    raise RuntimeError("OSM preview failed: " + " | ".join(errors))
+
+
 def selection_record(payload, boundary, bbox, boundary_path):
     precision = payload.get("precision_preset", "standard")
     if precision not in PRECISION_SCALE:
@@ -104,6 +269,7 @@ def selection_record(payload, boundary, bbox, boundary_path):
         "gee_project": payload.get("gee_project") or None,
         "precision_preset": precision,
         "requested_scale_m": PRECISION_SCALE[precision],
+        "model_settings": normalize_model_settings(payload.get("model_settings")),
     }
 
 
@@ -197,6 +363,7 @@ def make_handler(app_dir, data_dir, scripts_dir):
     boundary_path = data_dir / "site_boundary.geojson"
     selection_path = data_dir / "site_selection.json"
     geocode_cache = data_dir / "geocode_cache.json"
+    osm_preview_cache = data_dir / "osm_preview.json"
 
     class Handler(BaseHTTPRequestHandler):
         server_version = "RhinoSiteStudio/2.0"
@@ -281,6 +448,12 @@ def make_handler(app_dir, data_dir, scripts_dir):
                         "plan_path": str(output_path.resolve()),
                         "plan": result,
                     })
+                    return
+                if route == "/api/osm-preview":
+                    boundary, bbox = normalize_boundary(payload.get("boundary") or read_json(boundary_path, {}))
+                    result = fetch_osm_preview(bbox, osm_preview_cache)
+                    result["model_settings"] = normalize_model_settings(payload.get("model_settings"))
+                    self._json(200, result)
                     return
                 self.send_error(404)
             except json.JSONDecodeError:

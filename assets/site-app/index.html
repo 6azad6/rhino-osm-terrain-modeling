@@ -74,7 +74,7 @@
         </div>
 
         <div class="action-stack">
-          <button id="save-selection" class="button button-primary button-wide" type="button" disabled data-i18n="saveBoundary">Save boundary</button>
+          <button id="save-selection" class="button button-primary button-wide" type="button" disabled data-i18n="saveAndConfigure">Save and configure model</button>
           <div class="split-actions">
             <button id="plan-osm" class="button button-secondary" type="button" disabled data-i18n="planOsm">Plan OSM</button>
             <button id="plan-dem" class="button button-secondary" type="button" disabled data-i18n="planDem">Plan DEM</button>
@@ -134,7 +134,7 @@
       <footer class="rail-footer">
         <div class="tabs" role="group" data-i18n-aria-label="workspaceView">
           <button class="tab is-active" id="map-tab" aria-pressed="true" type="button" data-i18n="map">Map</button>
-          <button class="tab" id="preview-tab" aria-pressed="false" type="button" data-i18n="extent">Extent</button>
+          <button class="tab" id="preview-tab" aria-pressed="false" type="button" data-i18n="model">Model</button>
         </div>
         <p id="activity-message" class="activity-message" role="status">Ready for a boundary.</p>
       </footer>
@@ -142,16 +142,99 @@
   </main>
 
   <section id="preview-panel" class="preview-panel" aria-labelledby="preview-tab" hidden>
-    <div class="preview-head">
-      <div>
-        <h2 data-i18n="workingExtent">Working extent</h2>
-        <p data-i18n="extentHelp">This plane shows only the selected bounds. Terrain appears after DEM acquisition and the Rhino build.</p>
-      </div>
-      <button id="close-preview" class="button button-secondary" type="button" data-i18n="backToMap">Back to map</button>
-    </div>
-    <div class="preview-stage">
-      <canvas id="preview-canvas" width="1200" height="620" data-i18n-aria-label="extentPreview"></canvas>
-      <div id="preview-empty" class="preview-empty" data-i18n="previewEmpty">Draw a boundary to see the working extent.</div>
+    <div class="model-workbench">
+      <section class="model-stage-shell">
+        <header class="model-toolbar">
+          <div>
+            <h2 data-i18n="modelPreview">OSM model preview</h2>
+            <p data-i18n="modelPreviewHelp">Inspect massing and layer styling before data preparation.</p>
+          </div>
+          <div class="model-actions">
+            <span id="preview-source-state" class="preview-source-state" data-i18n="extentMode">Extent mode</span>
+            <button id="load-osm-preview" class="button button-primary" type="button" data-i18n="loadOsmPreview">Load OSM preview</button>
+            <button id="reset-preview-view" class="button button-secondary" type="button" data-i18n="resetView">Reset view</button>
+            <button id="close-preview" class="button button-secondary" type="button" data-i18n="backToMap">Back to map</button>
+          </div>
+        </header>
+        <div class="preview-stage">
+          <canvas id="preview-canvas" width="1400" height="820" tabindex="0" aria-describedby="preview-summary" data-i18n-aria-label="modelPreviewCanvas"></canvas>
+          <p id="preview-summary" class="sr-only" aria-live="polite"></p>
+          <div id="preview-empty" class="preview-empty">
+            <strong data-i18n="previewEmptyTitle">Select and save a site first</strong>
+            <span data-i18n="previewEmptyHelp">The model preview becomes available after the boundary is saved.</span>
+          </div>
+          <div id="preview-loading" class="preview-loading" hidden aria-live="polite">
+            <span class="loading-bar"></span>
+            <span data-i18n="loadingPreview">Loading OSM preview...</span>
+          </div>
+          <div class="preview-hud">
+            <span data-i18n="previewControls">Drag to rotate · Wheel to zoom</span>
+            <span id="preview-honesty" data-i18n="planarPreview">Planar OSM preview; final geometry is projected to the DEM.</span>
+          </div>
+        </div>
+        <footer class="model-legend" aria-label="Preview legend">
+          <span><i data-legend="terrain"></i><b data-i18n="layerTerrain">Terrain</b></span>
+          <span><i data-legend="roads"></i><b data-i18n="layerRoads">Roads</b></span>
+          <span><i data-legend="buildings"></i><b data-i18n="layerBuildings">Buildings</b></span>
+          <span><i data-legend="water"></i><b data-i18n="layerWater">Water</b></span>
+          <span><i data-legend="landuse"></i><b data-i18n="layerLanduse">Land use</b></span>
+        </footer>
+      </section>
+
+      <aside class="model-control-rail" data-i18n-aria-label="modelControls">
+        <div class="model-control-scroll">
+          <section class="config-section">
+            <h3 data-i18n="buildingRules">Building height rules</h3>
+            <p data-i18n="buildingRulesHelp">OSM height wins, then levels × floor height, then the default.</p>
+            <div class="numeric-grid">
+              <label>
+                <span data-i18n="defaultHeight">Default height</span>
+                <span class="input-unit"><input id="default-building-height" type="number" min="1" max="300" step="1" value="10"><b>m</b></span>
+              </label>
+              <label>
+                <span data-i18n="floorHeight">Floor height</span>
+                <span class="input-unit"><input id="floor-height" type="number" min="2" max="8" step="0.1" value="3"><b>m</b></span>
+              </label>
+            </div>
+            <label class="range-field">
+              <span><span data-i18n="heightScale">Height scale</span><output id="height-scale-value">1.0×</output></span>
+              <input id="height-scale" type="range" min="0.2" max="3" step="0.1" value="1">
+            </label>
+          </section>
+
+          <section class="config-section">
+            <h3 data-i18n="modelLayers">Model layers and colors</h3>
+            <p data-i18n="modelLayersHelp">The same visibility and material colors are written into the Rhino file.</p>
+            <div class="layer-config" id="layer-config">
+              <div class="layer-row" data-layer-row="terrain"><input id="visible-terrain" type="checkbox" data-layer-visible="terrain" checked><input id="color-terrain" type="color" data-layer-color="terrain" value="#697e61"><label for="visible-terrain" data-i18n="layerTerrain">Terrain</label></div>
+              <div class="layer-row" data-layer-row="contours"><input id="visible-contours" type="checkbox" data-layer-visible="contours" checked><input id="color-contours" type="color" data-layer-color="contours" value="#5c6e53"><label for="visible-contours" data-i18n="layerContours">Contours</label></div>
+              <div class="layer-row" data-layer-row="roads"><input id="visible-roads" type="checkbox" data-layer-visible="roads" checked><input id="color-roads" type="color" data-layer-color="roads" value="#9b8e7c"><label for="visible-roads" data-i18n="layerRoads">Roads</label></div>
+              <div class="layer-row" data-layer-row="buildings"><input id="visible-buildings" type="checkbox" data-layer-visible="buildings" checked><input id="color-buildings" type="color" data-layer-color="buildings" value="#b8c0ca"><label for="visible-buildings" data-i18n="layerBuildings">Buildings</label></div>
+              <div class="layer-row" data-layer-row="water"><input id="visible-water" type="checkbox" data-layer-visible="water" checked><input id="color-water" type="color" data-layer-color="water" value="#4984b0"><label for="visible-water" data-i18n="layerWater">Water</label></div>
+              <div class="layer-row" data-layer-row="landuse"><input id="visible-landuse" type="checkbox" data-layer-visible="landuse" checked><input id="color-landuse" type="color" data-layer-color="landuse" value="#719064"><label for="visible-landuse" data-i18n="layerLanduse">Land use</label></div>
+            </div>
+          </section>
+
+          <section class="config-section preview-stats-section">
+            <div class="config-heading-row">
+              <h3 data-i18n="previewStats">Preview statistics</h3>
+              <span id="preview-truncated" class="status-chip" hidden data-i18n="previewTruncated">Limited</span>
+            </div>
+            <dl class="preview-stats">
+              <div><dt data-i18n="layerBuildings">Buildings</dt><dd id="stat-buildings">0</dd></div>
+              <div><dt data-i18n="layerRoads">Roads</dt><dd id="stat-roads">0</dd></div>
+              <div><dt data-i18n="layerWater">Water</dt><dd id="stat-water">0</dd></div>
+              <div><dt data-i18n="layerLanduse">Land use</dt><dd id="stat-landuse">0</dd></div>
+              <div><dt data-i18n="osmHeights">OSM heights</dt><dd id="stat-real-heights">0</dd></div>
+              <div><dt data-i18n="defaultHeights">Default heights</dt><dd id="stat-default-heights">0</dd></div>
+            </dl>
+          </section>
+        </div>
+        <footer class="model-control-footer">
+          <button id="save-model-settings" class="button button-primary button-wide" type="button" data-i18n="saveModelSettings">Save model settings</button>
+          <p id="model-config-status" class="activity-message" role="status" data-i18n="settingsFollowSelection">Settings are stored with the site selection.</p>
+        </footer>
+      </aside>
     </div>
   </section>
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "Rhino OSM Terrain Studio"
-  short_description: "Select sites and build Rhino terrain from OSM and DEM"
-  default_prompt: "Use $rhino-osm-terrain-modeling to select a site, acquire OSM and DEM data, and build a verified Rhino 8 model."
+  short_description: "Preview OSM sites and generate materialized .3dm terrain"
+  default_prompt: "Use $rhino-osm-terrain-modeling to select and preview a site, configure layers and building heights, acquire OSM and DEM data, and generate a verified materialized .3dm without opening Rhino."

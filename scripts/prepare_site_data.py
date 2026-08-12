@@ -173,6 +173,7 @@ def main() -> int:
     parser.add_argument("--out-dir", type=Path, default=Path("data/derived"))
     parser.add_argument("--crs", default="auto", help="projected metric CRS, or auto for local UTM")
     parser.add_argument("--precision", choices=tuple(PRECISION), default="standard")
+    parser.add_argument("--selection", type=Path, help="site_selection.json with model preview settings")
     parser.add_argument("--run", action="store_true", help="execute the planned commands")
     args = parser.parse_args()
 
@@ -258,6 +259,17 @@ def main() -> int:
     if args.precision == "fine":
         warnings.append("Fine mode may interpolate below the native DEM resolution; it does not create new survey accuracy.")
 
+    selection_path = args.selection
+    if selection_path is None:
+        candidate = args.boundary.parent / "site_selection.json"
+        selection_path = candidate if candidate.is_file() else None
+    selection = {}
+    if selection_path:
+        try:
+            selection = json.loads(selection_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as error:
+            raise ValueError(f"invalid site selection file: {error}") from error
+
     if args.run:
         for command in commands:
             run(command, logs)
@@ -278,6 +290,8 @@ def main() -> int:
         "local_origin": "DEM grid center; applied by rhino_site_builder.py",
         "precision_preset": args.precision,
         "precision": precision,
+        "selection": str(selection_path.resolve()) if selection_path else None,
+        "model_settings": selection.get("model_settings") or {},
         "tools": {
             name: bool(value)
             for name, value in (("gdalwarp", gdalwarp), ("gdal_translate", gdal_translate), ("ogr2ogr", ogr2ogr), ("osmium", osmium))

@@ -59,6 +59,7 @@
       featureSingle: "{count} feature; approx {width} x {height} km.",
       featurePlural: "{count} features; approx {width} x {height} km.",
       saveBoundary: "Save boundary",
+      saveAndConfigure: "Save and configure model",
       planOsm: "Plan OSM",
       planDem: "Plan DEM",
       findPlace: "Find a place",
@@ -89,6 +90,7 @@
       credentialsHelp: "OSM is public. GEE may ask you to authorize locally and provide a project ID. Tokens are never saved here.",
       map: "Map",
       extent: "Extent",
+      model: "Model",
       readyForBoundary: "Ready for a boundary.",
       boundaryReady: "Boundary ready. Review settings, then save.",
       savingBoundary: "Saving boundary and settings...",
@@ -115,6 +117,44 @@
       locationDenied: "Location permission was not granted.",
       offlineActivity: "Local service is unavailable. You can still draw and export a GeoJSON file.",
       requestFailed: "Request failed: {message}"
+      ,
+      modelPreview: "OSM model preview",
+      modelPreviewHelp: "Inspect massing and layer styling before data preparation.",
+      modelPreviewCanvas: "Interactive OSM model preview",
+      modelControls: "Model preview controls",
+      loadOsmPreview: "Load OSM preview",
+      resetView: "Reset view",
+      extentMode: "Extent mode",
+      osmPreviewReady: "OSM preview ready",
+      previewEmptyTitle: "Select and save a site first",
+      previewEmptyHelp: "The model preview becomes available after the boundary is saved.",
+      loadingPreview: "Loading OSM preview...",
+      previewControls: "Drag to rotate · Wheel to zoom",
+      planarPreview: "Planar OSM preview; final geometry is projected to the DEM.",
+      buildingRules: "Building height rules",
+      buildingRulesHelp: "OSM height wins, then levels × floor height, then the default.",
+      defaultHeight: "Default height",
+      floorHeight: "Floor height",
+      heightScale: "Height scale",
+      modelLayers: "Model layers and colors",
+      modelLayersHelp: "The same visibility and material colors are written into the Rhino file.",
+      layerTerrain: "Terrain",
+      layerContours: "Contours",
+      layerRoads: "Roads",
+      layerBuildings: "Buildings",
+      layerWater: "Water",
+      layerLanduse: "Land use",
+      previewStats: "Preview statistics",
+      previewTruncated: "Limited",
+      osmHeights: "OSM heights",
+      defaultHeights: "Default heights",
+      saveModelSettings: "Save model settings",
+      settingsFollowSelection: "Settings are stored with the site selection.",
+      modelSettingsSaved: "Model settings saved.",
+      previewRequiresOverpass: "OSM preview is available for Overpass selections. Use the formal pipeline for local PBF data.",
+      previewFailed: "Preview failed: {message}",
+      previewSummary: "Preview contains {buildings} buildings, {roads} roads, {water} water areas, and {landuse} land-use areas. Use arrow keys to rotate and plus or minus to zoom.",
+      layerColor: "{layer} color"
     },
     zh: {
       documentTitle: "Rhino 场地工作台",
@@ -173,6 +213,7 @@
       featureSingle: "{count} 个要素，约 {width} x {height} km。",
       featurePlural: "{count} 个要素，约 {width} x {height} km。",
       saveBoundary: "保存边界",
+      saveAndConfigure: "保存并配置模型",
       planOsm: "规划 OSM",
       planDem: "规划 DEM",
       findPlace: "查找地点",
@@ -203,6 +244,7 @@
       credentialsHelp: "OSM 是公开数据。GEE 可能要求在本机授权并提供项目 ID。这里不会保存 token。",
       map: "地图",
       extent: "范围",
+      model: "模型",
       readyForBoundary: "等待选择边界。",
       boundaryReady: "边界已就绪。请检查设置后保存。",
       savingBoundary: "正在保存边界和设置...",
@@ -229,6 +271,44 @@
       locationDenied: "定位权限未获允许。",
       offlineActivity: "本地服务不可用。仍可绘制并导出 GeoJSON 文件。",
       requestFailed: "请求失败：{message}"
+      ,
+      modelPreview: "OSM 模型预览",
+      modelPreviewHelp: "在数据预处理前检查体量、图层和材质配置。",
+      modelPreviewCanvas: "可交互 OSM 模型预览",
+      modelControls: "模型预览控制",
+      loadOsmPreview: "加载 OSM 预览",
+      resetView: "重置视图",
+      extentMode: "范围模式",
+      osmPreviewReady: "OSM 预览已就绪",
+      previewEmptyTitle: "请先选择并保存场地",
+      previewEmptyHelp: "保存边界后即可进行模型预览与配置。",
+      loadingPreview: "正在加载 OSM 预览...",
+      previewControls: "拖动旋转 · 滚轮缩放",
+      planarPreview: "此处为平面 OSM 预览；最终几何会投影贴合 DEM。",
+      buildingRules: "建筑高度规则",
+      buildingRulesHelp: "优先使用 OSM height，其次为层数 × 层高，最后使用默认高度。",
+      defaultHeight: "默认高度",
+      floorHeight: "单层高度",
+      heightScale: "高度倍率",
+      modelLayers: "模型图层与颜色",
+      modelLayersHelp: "相同的可见性与材质颜色会写入 Rhino 文件。",
+      layerTerrain: "地形",
+      layerContours: "等高线",
+      layerRoads: "道路",
+      layerBuildings: "建筑",
+      layerWater: "水体",
+      layerLanduse: "土地利用",
+      previewStats: "预览统计",
+      previewTruncated: "已限量",
+      osmHeights: "OSM 高度",
+      defaultHeights: "默认高度",
+      saveModelSettings: "保存模型设置",
+      settingsFollowSelection: "设置会与场地选择一起保存。",
+      modelSettingsSaved: "模型设置已保存。",
+      previewRequiresOverpass: "OSM 预览适用于 Overpass 选区。本地 PBF 请使用正式数据流程。",
+      previewFailed: "预览失败：{message}",
+      previewSummary: "预览包含 {buildings} 栋建筑、{roads} 条道路、{water} 处水体和 {landuse} 处土地利用。可用方向键旋转，加号或减号缩放。",
+      layerColor: "{layer}颜色"
     }
   };
   const precisionInfo = {
@@ -239,7 +319,8 @@
   const state = {
     map: null, drawn: null, boundary: null, bbox: null, theme: "auto", saving: false,
     language: "en", activity: { key: "readyForBoundary", kind: "", params: {} },
-    connection: "localService", searchMessage: null
+    connection: "localService", searchMessage: null, osmPreview: null,
+    previewView: { yaw: -0.72, pitch: 0.48, zoom: 1, dragging: false, x: 0, y: 0 }
   };
   const el = (id) => document.getElementById(id);
 
@@ -325,8 +406,9 @@
     const normalized = normalizeBoundary(featureCollection);
     state.boundary = { type: "FeatureCollection", features: normalized.features };
     state.bbox = normalized.bbox;
+    state.osmPreview = null;
     updateBoundaryReadout();
-    ["save-selection", "plan-osm", "plan-dem"].forEach((id) => { el(id).disabled = false; });
+    ["save-selection", "plan-osm", "plan-dem", "preview-tab", "save-model-settings"].forEach((id) => { el(id).disabled = false; });
     boundaryToLayer(state.boundary);
     drawPreview();
     setActivity("boundaryReady", "success");
@@ -364,8 +446,63 @@
       gee_project: el("gee-project").value.trim() || null,
       precision_preset: precision,
       sample_step_m: precisionInfo[precision].sample,
-      contour_interval_m: precisionInfo[precision].contour
+      contour_interval_m: precisionInfo[precision].contour,
+      model_settings: getModelSettings()
     };
+  }
+
+  function getModelSettings() {
+    const colors = {};
+    const visibleLayers = {};
+    document.querySelectorAll("[data-layer-color]").forEach((input) => { colors[input.dataset.layerColor] = input.value; });
+    document.querySelectorAll("[data-layer-visible]").forEach((input) => { visibleLayers[input.dataset.layerVisible] = input.checked; });
+    return {
+      default_building_height_m: clampInput("default-building-height", 10),
+      floor_height_m: clampInput("floor-height", 3),
+      height_scale: clampInput("height-scale", 1),
+      colors,
+      visible_layers: visibleLayers
+    };
+  }
+
+  function clampInput(id, fallback) {
+    const input = el(id);
+    const minimum = Number(input.min);
+    const maximum = Number(input.max);
+    const parsed = Number(input.value);
+    const value = Number.isFinite(parsed) ? Math.min(Math.max(parsed, minimum), maximum) : fallback;
+    input.value = String(value);
+    return value;
+  }
+
+  function applyModelSettings(settings = {}) {
+    if (settings.default_building_height_m != null) el("default-building-height").value = settings.default_building_height_m;
+    if (settings.floor_height_m != null) el("floor-height").value = settings.floor_height_m;
+    if (settings.height_scale != null) el("height-scale").value = settings.height_scale;
+    Object.entries(settings.colors || {}).forEach(([key, value]) => {
+      const input = document.querySelector(`[data-layer-color="${key}"]`);
+      if (input) input.value = value;
+    });
+    Object.entries(settings.visible_layers || {}).forEach(([key, value]) => {
+      const input = document.querySelector(`[data-layer-visible="${key}"]`);
+      if (input) input.checked = Boolean(value);
+    });
+    updateModelControls();
+  }
+
+  function updateModelControls() {
+    el("height-scale-value").value = `${Number(el("height-scale").value).toFixed(1)}×`;
+    const colors = getModelSettings().colors;
+    document.querySelectorAll("[data-legend]").forEach((swatch) => {
+      swatch.style.backgroundColor = colors[swatch.dataset.legend] || "#808080";
+    });
+    drawPreview();
+  }
+
+  function updateColorLabels() {
+    document.querySelectorAll("[data-layer-color]").forEach((input) => {
+      input.setAttribute("aria-label", t("layerColor", { layer: t(`layer${input.dataset.layerColor[0].toUpperCase()}${input.dataset.layerColor.slice(1)}`) }));
+    });
   }
 
   async function postJson(path, body) {
@@ -375,7 +512,7 @@
     return result;
   }
 
-  async function saveSelection() {
+  async function saveSelection(openModel = false) {
     if (!state.boundary || state.saving) return;
     state.saving = true;
     el("save-selection").disabled = true;
@@ -385,6 +522,7 @@
       setActivity("boundarySaved", "success");
       toast("selectionToast");
       setConnection("selectionSaved");
+      if (openModel) showPreview(true);
       return result;
     } catch (error) {
       setActivity("requestFailed", "error", { message: error.message });
@@ -393,6 +531,16 @@
     } finally {
       state.saving = false;
       el("save-selection").disabled = false;
+    }
+  }
+
+  async function saveModelSettings() {
+    if (!state.boundary || state.saving) return;
+    const result = await saveSelection(false);
+    if (result) {
+      el("model-config-status").textContent = t("modelSettingsSaved");
+      el("model-config-status").className = "activity-message is-success";
+      toast("modelSettingsSaved");
     }
   }
 
@@ -430,37 +578,218 @@
     }
   }
 
+  function parseHeight(feature, settings) {
+    const direct = Number.parseFloat(feature.height);
+    if (Number.isFinite(direct) && direct > 0) return { value: direct * settings.height_scale, source: "osm" };
+    const levels = Number.parseFloat(feature.levels);
+    if (Number.isFinite(levels) && levels > 0) return { value: levels * settings.floor_height_m * settings.height_scale, source: "osm" };
+    return { value: settings.default_building_height_m * settings.height_scale, source: "default" };
+  }
+
+  function shadeColor(hex, amount) {
+    const value = Number.parseInt(String(hex).replace("#", ""), 16);
+    if (!Number.isFinite(value)) return "#808080";
+    const channels = [value >> 16, (value >> 8) & 255, value & 255].map((channel) =>
+      Math.max(0, Math.min(255, Math.round(channel + amount * 255))));
+    return `rgb(${channels[0]} ${channels[1]} ${channels[2]})`;
+  }
+
+  function previewTransform(canvas) {
+    const bbox = state.bbox;
+    const latitude = (bbox[1] + bbox[3]) / 2;
+    const kx = 111320 * Math.cos(latitude * Math.PI / 180);
+    const ky = 110540;
+    const centerLon = (bbox[0] + bbox[2]) / 2;
+    const centerLat = (bbox[1] + bbox[3]) / 2;
+    const extentX = Math.max(10, Math.abs(bbox[2] - bbox[0]) * kx);
+    const extentY = Math.max(10, Math.abs(bbox[3] - bbox[1]) * ky);
+    const baseScale = Math.min(canvas.width * 0.66 / extentX, canvas.height * 0.48 / extentY) * state.previewView.zoom;
+    const cosYaw = Math.cos(state.previewView.yaw);
+    const sinYaw = Math.sin(state.previewView.yaw);
+    const cosPitch = Math.cos(state.previewView.pitch);
+    const sinPitch = Math.sin(state.previewView.pitch);
+    const toWorld = (coordinate) => [(coordinate[0] - centerLon) * kx, (coordinate[1] - centerLat) * ky];
+    const project = (point, z = 0) => {
+      const rx = point[0] * cosYaw - point[1] * sinYaw;
+      const ry = point[0] * sinYaw + point[1] * cosYaw;
+      const vertical = z * 3.2;
+      return [
+        canvas.width / 2 + rx * baseScale,
+        canvas.height * 0.53 - (ry * cosPitch - vertical * sinPitch) * baseScale,
+        ry * sinPitch + vertical * cosPitch
+      ];
+    };
+    return { toWorld, project, extentX, extentY, baseScale };
+  }
+
+  function drawPolygon(context, points, fill, stroke = null, lineWidth = 1) {
+    if (points.length < 3) return;
+    context.beginPath();
+    context.moveTo(points[0][0], points[0][1]);
+    points.slice(1).forEach((point) => context.lineTo(point[0], point[1]));
+    context.closePath();
+    context.fillStyle = fill;
+    context.fill();
+    if (stroke) {
+      context.strokeStyle = stroke;
+      context.lineWidth = lineWidth;
+      context.stroke();
+    }
+  }
+
   function drawPreview() {
     const canvas = el("preview-canvas");
+    if (canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+      const displayWidth = Math.round(canvas.clientWidth);
+      const displayHeight = Math.round(canvas.clientHeight);
+      if (canvas.width !== displayWidth || canvas.height !== displayHeight) {
+        canvas.width = displayWidth;
+        canvas.height = displayHeight;
+      }
+    }
     const context = canvas.getContext("2d");
     if (!context) return;
     const width = canvas.width; const height = canvas.height;
     context.clearRect(0, 0, width, height);
-    context.fillStyle = "#202a35"; context.fillRect(0, 0, width, height);
-    if (!state.bbox) { el("preview-empty").hidden = false; return; }
-    el("preview-empty").hidden = true;
-    const pad = 72; const cols = 28; const rows = 16;
-    const innerW = width - pad * 2; const innerH = height - pad * 2;
-    const bboxWidth = Math.max(0.000001, Math.abs(state.bbox[2] - state.bbox[0]));
-    const bboxHeight = Math.max(0.000001, Math.abs(state.bbox[3] - state.bbox[1]));
-    const aspect = Math.max(0.35, Math.min(2.8, bboxWidth / bboxHeight));
-    const project = (x, y) => [width / 2 + (x * aspect - y) * innerW / cols * 0.58, height * 0.66 + (x * aspect + y) * innerH / rows * 0.2];
-    for (let y = 0; y < rows; y += 1) {
-      for (let x = 0; x < cols; x += 1) {
-        const a = project(x - cols / 2, y - rows / 2);
-        const b = project(x + 1 - cols / 2, y - rows / 2);
-        const c = project(x + 1 - cols / 2, y + 1 - rows / 2);
-        const d = project(x - cols / 2, y + 1 - rows / 2);
-        context.beginPath(); context.moveTo(...a); context.lineTo(...b); context.lineTo(...c); context.lineTo(...d); context.closePath();
-        context.strokeStyle = "rgba(147, 175, 208, .22)"; context.lineWidth = 1; context.stroke();
-      }
+    context.fillStyle = "#17202a";
+    context.fillRect(0, 0, width, height);
+    if (!state.bbox) {
+      el("preview-empty").hidden = false;
+      return;
     }
-    context.fillStyle = "#8ca9ff"; context.font = "600 18px Segoe UI, sans-serif";
-    context.fillText(t("extentOnly"), 40, 46);
-    context.fillStyle = "#a9b9cd"; context.font = "13px Segoe UI, sans-serif";
-    context.fillText(`${formatCoord(state.bbox[0])}, ${formatCoord(state.bbox[1])} to ${formatCoord(state.bbox[2])}, ${formatCoord(state.bbox[3])}`, 40, 69);
-    context.fillStyle = "rgba(140, 169, 255, .7)"; context.fillRect(40, height - 34, 130, 2);
-    context.fillStyle = "#a9b9cd"; context.fillText(t("demNotLoaded"), 182, height - 28);
+    el("preview-empty").hidden = true;
+    const settings = getModelSettings();
+    const transform = previewTransform(canvas);
+    const halfX = transform.extentX / 2;
+    const halfY = transform.extentY / 2;
+    const base = [
+      transform.project([-halfX, -halfY]),
+      transform.project([halfX, -halfY]),
+      transform.project([halfX, halfY]),
+      transform.project([-halfX, halfY])
+    ];
+    if (settings.visible_layers.terrain) {
+      drawPolygon(context, base, settings.colors.terrain, shadeColor(settings.colors.terrain, -0.16), 1.2);
+    }
+    if (settings.visible_layers.contours) {
+      context.save();
+      context.globalAlpha = 0.66;
+      context.strokeStyle = settings.colors.contours;
+      context.lineWidth = 1;
+      for (let index = 1; index < 10; index += 1) {
+        const ratio = index / 10;
+        const x = -halfX + transform.extentX * ratio;
+        const y = -halfY + transform.extentY * ratio;
+        const vertical = [transform.project([x, -halfY]), transform.project([x, halfY])];
+        const horizontal = [transform.project([-halfX, y]), transform.project([halfX, y])];
+        [vertical, horizontal].forEach((line) => {
+          context.beginPath(); context.moveTo(line[0][0], line[0][1]); context.lineTo(line[1][0], line[1][1]); context.stroke();
+        });
+      }
+      context.restore();
+    }
+
+    const preview = state.osmPreview;
+    const primitives = [];
+    const stats = { buildings: 0, roads: 0, water: 0, landuse: 0, real: 0, defaults: 0 };
+    if (preview?.features) {
+      preview.features.forEach((feature) => {
+        const world = feature.coordinates.map(transform.toWorld);
+        if (feature.kind === "buildings" && settings.visible_layers.buildings && world.length >= 4) {
+          const height = parseHeight(feature, settings);
+          height.source === "osm" ? stats.real += 1 : stats.defaults += 1;
+          stats.buildings += 1;
+          const lower = world.slice(0, -1);
+          const roof = lower.map((point) => transform.project(point, height.value));
+          const ground = lower.map((point) => transform.project(point, 0.12));
+          const depth = roof.reduce((sum, point) => sum + point[2], 0) / roof.length;
+          primitives.push({ type: "building", roof, ground, depth, color: settings.colors.buildings });
+        } else if (feature.kind === "roads" && settings.visible_layers.roads && world.length >= 2) {
+          stats.roads += 1;
+          const points = world.map((point) => transform.project(point, 0.24));
+          const widthMeters = Number.parseFloat(feature.width) || 5;
+          primitives.push({
+            type: "line", points, depth: points.reduce((sum, point) => sum + point[2], 0) / points.length,
+            color: settings.colors.roads, width: Math.max(1.5, Math.min(14, widthMeters * transform.baseScale))
+          });
+        } else if ((feature.kind === "water" || feature.kind === "landuse") && settings.visible_layers[feature.kind] && world.length >= 4) {
+          stats[feature.kind] += 1;
+          const points = world.slice(0, -1).map((point) => transform.project(point, feature.kind === "water" ? 0.16 : 0.08));
+          primitives.push({
+            type: "surface", points, depth: points.reduce((sum, point) => sum + point[2], 0) / points.length,
+            color: settings.colors[feature.kind]
+          });
+        }
+      });
+    }
+    primitives.sort((first, second) => second.depth - first.depth);
+    primitives.forEach((primitive) => {
+      if (primitive.type === "surface") {
+        drawPolygon(context, primitive.points, primitive.color, shadeColor(primitive.color, -0.14), 0.8);
+      } else if (primitive.type === "line") {
+        context.beginPath();
+        context.moveTo(primitive.points[0][0], primitive.points[0][1]);
+        primitive.points.slice(1).forEach((point) => context.lineTo(point[0], point[1]));
+        context.strokeStyle = primitive.color;
+        context.lineWidth = primitive.width;
+        context.lineJoin = "round";
+        context.lineCap = "round";
+        context.stroke();
+      } else if (primitive.type === "building") {
+        for (let index = 0; index < primitive.roof.length; index += 1) {
+          const next = (index + 1) % primitive.roof.length;
+          drawPolygon(context, [
+            primitive.ground[index], primitive.ground[next], primitive.roof[next], primitive.roof[index]
+          ], shadeColor(primitive.color, index % 2 ? -0.12 : -0.2), null);
+        }
+        drawPolygon(context, primitive.roof, primitive.color, shadeColor(primitive.color, 0.12), 0.8);
+      }
+    });
+
+    ["buildings", "roads", "water", "landuse"].forEach((key) => {
+      el(`stat-${key}`).textContent = stats[key].toLocaleString();
+    });
+    el("stat-real-heights").textContent = stats.real.toLocaleString();
+    el("stat-default-heights").textContent = stats.defaults.toLocaleString();
+    el("preview-summary").textContent = t("previewSummary", stats);
+    context.fillStyle = "#dce5ef";
+    context.font = "600 18px Segoe UI, sans-serif";
+    context.fillText(preview ? t("osmPreviewReady") : t("extentOnly"), 32, 40);
+    context.fillStyle = "#9eafc2";
+    context.font = "13px Segoe UI, sans-serif";
+    context.fillText(preview ? t("planarPreview") : t("demNotLoaded"), 32, 64);
+  }
+
+  async function loadOsmPreview() {
+    if (!state.boundary) return;
+    if (el("osm-provider").value !== "overpass") {
+      toast("previewRequiresOverpass");
+      return;
+    }
+    el("preview-loading").hidden = false;
+    el("load-osm-preview").disabled = true;
+    try {
+      const result = await postJson("/api/osm-preview", {
+        boundary: state.boundary,
+        model_settings: getModelSettings()
+      });
+      state.osmPreview = result;
+      el("preview-source-state").textContent = t("osmPreviewReady");
+      el("preview-truncated").hidden = !result.truncated;
+      drawPreview();
+    } catch (error) {
+      toast("previewFailed", { message: error.message });
+      el("model-config-status").textContent = t("previewFailed", { message: error.message });
+      el("model-config-status").className = "activity-message is-error";
+    } finally {
+      el("preview-loading").hidden = true;
+      el("load-osm-preview").disabled = false;
+    }
+  }
+
+  function resetPreviewView() {
+    state.previewView = { yaw: -0.72, pitch: 0.48, zoom: 1, dragging: false, x: 0, y: 0 };
+    drawPreview();
   }
 
   function applyLeafletLocale() {
@@ -534,6 +863,7 @@
     updateBoundaryReadout();
     updatePrecisionNote();
     updateThemeToggle();
+    updateColorLabels();
     applyLeafletLocale();
     drawPreview();
     try { window.localStorage.setItem("rhino-site-language", state.language); } catch (_) { /* optional */ }
@@ -547,6 +877,7 @@
   }
 
   function showPreview(show) {
+    if (show && !state.boundary) return;
     const workbench = document.querySelector(".workbench");
     const panel = el("preview-panel");
     workbench.hidden = show;
@@ -557,7 +888,7 @@
     el("preview-tab").setAttribute("aria-pressed", String(show));
     if (show) {
       drawPreview();
-      el("close-preview").focus();
+      el("load-osm-preview").focus();
     } else {
       el("map-tab").focus();
     }
@@ -576,6 +907,7 @@
           const radio = document.querySelector(`input[name="precision"][value="${result.selection.precision_preset}"]`);
           if (radio) radio.checked = true;
         }
+        if (result.selection.model_settings) applyModelSettings(result.selection.model_settings);
         drawPreview();
       }
     } catch (_) {
@@ -620,8 +952,8 @@
     state.map.on(L.Draw.Event.CREATED, (event) => setBoundary(event.layer.toGeoJSON()));
     state.map.on(L.Draw.Event.EDITED, (event) => { event.layers.eachLayer((layer) => setBoundary(layer.toGeoJSON())); });
     state.map.on(L.Draw.Event.DELETED, () => {
-      state.boundary = null; state.bbox = null;
-      ["save-selection", "plan-osm", "plan-dem"].forEach((id) => { el(id).disabled = true; });
+      state.boundary = null; state.bbox = null; state.osmPreview = null;
+      ["save-selection", "plan-osm", "plan-dem", "preview-tab", "save-model-settings"].forEach((id) => { el(id).disabled = true; });
       updateBoundaryReadout(); drawPreview(); setActivity("boundaryCleared");
     });
     applyLeafletLocale();
@@ -629,12 +961,15 @@
 
   function bind() {
     el("search-form").addEventListener("submit", searchPlace);
-    el("save-selection").addEventListener("click", saveSelection);
+    el("save-selection").addEventListener("click", () => saveSelection(true));
     el("plan-osm").addEventListener("click", () => plan("osm"));
     el("plan-dem").addEventListener("click", () => plan("dem"));
     el("preview-tab").addEventListener("click", () => showPreview(true));
     el("map-tab").addEventListener("click", () => showPreview(false));
     el("close-preview").addEventListener("click", () => showPreview(false));
+    el("load-osm-preview").addEventListener("click", loadOsmPreview);
+    el("reset-preview-view").addEventListener("click", resetPreviewView);
+    el("save-model-settings").addEventListener("click", saveModelSettings);
     el("load-boundary-button").addEventListener("click", () => el("boundary-file").click());
     el("boundary-file").addEventListener("change", async (event) => {
       const file = event.target.files?.[0]; if (!file) return;
@@ -647,9 +982,55 @@
       navigator.geolocation.getCurrentPosition((position) => state.map.setView([position.coords.latitude, position.coords.longitude], 13), () => toast("locationDenied"));
     });
     document.querySelectorAll('input[name="precision"]').forEach((radio) => radio.addEventListener("change", () => { updatePrecisionNote(); drawPreview(); }));
+    ["default-building-height", "floor-height", "height-scale"].forEach((id) => {
+      el(id).addEventListener("input", updateModelControls);
+    });
+    document.querySelectorAll("[data-layer-visible], [data-layer-color]").forEach((input) => {
+      input.addEventListener("input", updateModelControls);
+      input.addEventListener("change", updateModelControls);
+    });
+    const canvas = el("preview-canvas");
+    canvas.addEventListener("pointerdown", (event) => {
+      state.previewView.dragging = true;
+      state.previewView.x = event.clientX;
+      state.previewView.y = event.clientY;
+      canvas.setPointerCapture(event.pointerId);
+    });
+    canvas.addEventListener("pointermove", (event) => {
+      if (!state.previewView.dragging) return;
+      state.previewView.yaw += (event.clientX - state.previewView.x) * 0.008;
+      state.previewView.pitch = Math.max(0.18, Math.min(1.05, state.previewView.pitch - (event.clientY - state.previewView.y) * 0.005));
+      state.previewView.x = event.clientX;
+      state.previewView.y = event.clientY;
+      drawPreview();
+    });
+    const stopDrag = () => { state.previewView.dragging = false; };
+    canvas.addEventListener("pointerup", stopDrag);
+    canvas.addEventListener("pointercancel", stopDrag);
+    canvas.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      state.previewView.zoom = Math.max(0.55, Math.min(2.4, state.previewView.zoom * (event.deltaY > 0 ? 0.9 : 1.1)));
+      drawPreview();
+    }, { passive: false });
+    canvas.addEventListener("keydown", (event) => {
+      const actions = {
+        ArrowLeft: () => { state.previewView.yaw -= 0.12; },
+        ArrowRight: () => { state.previewView.yaw += 0.12; },
+        ArrowUp: () => { state.previewView.pitch = Math.min(1.05, state.previewView.pitch + 0.08); },
+        ArrowDown: () => { state.previewView.pitch = Math.max(0.18, state.previewView.pitch - 0.08); },
+        "+": () => { state.previewView.zoom = Math.min(2.4, state.previewView.zoom * 1.1); },
+        "=": () => { state.previewView.zoom = Math.min(2.4, state.previewView.zoom * 1.1); },
+        "-": () => { state.previewView.zoom = Math.max(0.55, state.previewView.zoom * 0.9); }
+      };
+      if (!actions[event.key]) return;
+      event.preventDefault(); actions[event.key](); drawPreview();
+    });
+    window.addEventListener("resize", drawPreview);
     document.querySelectorAll("[data-language]").forEach((button) => button.addEventListener("click", () => applyLanguage(button.dataset.language)));
     el("theme-toggle").addEventListener("click", toggleTheme);
   }
 
-  bind(); applyLanguage(preferredLanguage()); initMap(); loadExisting();
+  el("preview-tab").disabled = true;
+  el("save-model-settings").disabled = true;
+  bind(); updateModelControls(); applyLanguage(preferredLanguage()); initMap(); loadExisting();
 })();
